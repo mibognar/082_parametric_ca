@@ -2,7 +2,7 @@
 
 #importing random class
 import random
-
+import json
 # global variables to be manipulated
 stimulus_set = []
 relay = 0
@@ -34,9 +34,42 @@ def group_relay():
         stimulus_finder(hn_group)
         relay = 0
 
-def set_factory(total):
-    for i in range(total):
+def set_factory(times):
+    stimulus_set = []
+    for i in range(times):
         group_relay()
+trial_rate = []
+trial_count=576
+def factor():
+    global trial_rate
+    global trial_count
+    set_factory(trial_count)
+    nc_count = 0
+    lc_count = 0
+    hc_count = 0
+    for i in stimulus_set:
+        nc_count += i.count("no_conflict")
+        lc_count += i.count("low_conflict")
+        hc_count += i.count("high_conflict")
+    nc = nc_count/trial_count
+    lc = lc_count/trial_count
+    hc = hc_count/trial_count
+    trial_rate = [nc,lc,hc]
 
-set_factory(588)
-print(stimulus_set)
+match_count = 0
+while True:
+    if trial_rate==[0.5,0.25,0.25]:
+        match_count +=1
+        print("Match found: {}".format(match_count))
+        with open("trials.json",'r+') as file:
+            # First we load existing data into a dict.
+            file_data = json.load(file)
+            # Join new_data with file_data inside emp_details
+            file_data["trials"].append(stimulus_set)
+            # Sets file's current position at offset.
+            file.seek(0)
+            # convert back to json.
+            json.dump(file_data, file)
+
+    stimulus_set = []
+    factor()
