@@ -1,8 +1,10 @@
 #------This script generates a random order of stimuli with the rules of the predefined methods-----
 
-#importing random class
+#importing random class and pandas
 import random
 import json
+import pandas as pd
+import numpy as np
 # global variables to be manipulated
 stimulus_set = []
 relay = 0
@@ -39,7 +41,7 @@ def set_factory(times):
     for i in range(times):
         group_relay()
 trial_rate = []
-trial_count=576
+trial_count=96
 def factor():
     global trial_rate
     global trial_count
@@ -59,17 +61,23 @@ def factor():
 match_count = 0
 while True:
     if trial_rate==[0.5,0.25,0.25]:
-        match_count +=1
-        print("Match found: {}".format(match_count))
-        with open("trials.json",'r+') as file:
-            # First we load existing data into a dict.
-            file_data = json.load(file)
-            # Join new_data with file_data inside emp_details
-            file_data["trials"].append(stimulus_set)
-            # Sets file's current position at offset.
-            file.seek(0)
-            # convert back to json.
-            json.dump(file_data, file)
+        trial_block = pd.DataFrame(stimulus_set, columns=['stimulus','congruency','response'])
+        trial_block['previous_congruency']=trial_block['congruency'].shift()
+        trial_block['con_pair']=trial_block['previous_congruency']+"-"+trial_block['congruency']
+        pair_counts = trial_block['con_pair'].value_counts()
+        if pair_counts["no_conflict-no_conflict"]==24 and pair_counts["no_conflict-low_conflict"]==12 and pair_counts["no_conflict-high_conflict"]==12 and pair_counts["low_conflict-no_conflict"]==12 and pair_counts["high_conflict-no_conflict"]==12 and pair_counts["high_conflict-high_conflict"]==6 and pair_counts["low_conflict-low_conflict"]==6:
+            match_count +=1
+            print("Match found: {}".format(match_count))
+            print("Correct paircount found, writing...")
+            with open("trials.json",'r+') as file:
+                # First we load existing data into a dict.
+                file_data = json.load(file)
+                # Join new_data with file_data inside emp_details
+                file_data["trials"].append(stimulus_set)
+                # Sets file's current position at offset.
+                file.seek(0)
+                # convert back to json.
+                json.dump(file_data, file)
 
     stimulus_set = []
     factor()
